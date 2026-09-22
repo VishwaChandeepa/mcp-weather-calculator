@@ -61,7 +61,7 @@ function createServer(): McpServer {
     server.registerTool(
         'get_weather',
         {
-            description: 'Get the current weather for a city',
+            description: 'Get detailed current weather information for a city',
             inputSchema: z.object({
                 city: z.string().describe('Name of the city')
             })
@@ -83,7 +83,10 @@ function createServer(): McpServer {
                                 `Temperature: ${current.temp_C}°C\n` +
                                 `Feels like: ${current.FeelsLikeC}°C\n` +
                                 `Condition: ${current.weatherDesc[0].value}\n` +
-                                `Humidity: ${current.humidity}%`
+                                `Humidity: ${current.humidity}%\n` +
+                                `Wind Speed: ${current.windspeedKmph} km/h\n` +
+                                `Visibility: ${current.visibility} km\n` +
+                                `Pressure: ${current.pressure} mb`
                         }
                     ]
                 };
@@ -120,7 +123,15 @@ function createServer(): McpServer {
                             `Available Tools:\n` +
                             `- add: Add two numbers\n` +
                             `- multiply: Multiply two numbers\n` +
-                            `- get_weather: Get current weather for a city`
+                            `- get_weather: Get detailed current weather\n\n` +
+                            `Weather information includes:\n` +
+                            `- Temperature\n` +
+                            `- Feels like temperature\n` +
+                            `- Weather condition\n` +
+                            `- Humidity\n` +
+                            `- Wind speed\n` +
+                            `- Visibility\n` +
+                            `- Atmospheric pressure`
                     }
                 ]
             };
@@ -132,7 +143,7 @@ function createServer(): McpServer {
         'weather_report',
         {
             title: 'Weather Report',
-            description: 'Create a clear weather report for a city',
+            description: 'Create a clear and detailed weather report for a city',
             argsSchema: z.object({
                 city: z.string().describe('Name of the city')
             })
@@ -144,13 +155,16 @@ function createServer(): McpServer {
                     content: {
                         type: 'text' as const,
                         text:
-                            `Create a clear weather report for ${city}.\n\n` +
+                            `Create a clear and detailed weather report for ${city}.\n\n` +
                             `Include:\n` +
                             `- City name\n` +
                             `- Temperature\n` +
                             `- Feels like temperature\n` +
                             `- Weather condition\n` +
-                            `- Humidity\n\n` +
+                            `- Humidity\n` +
+                            `- Wind speed\n` +
+                            `- Visibility\n` +
+                            `- Atmospheric pressure\n\n` +
                             `Keep the report simple and easy to understand.`
                     }
                 }
