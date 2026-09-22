@@ -1,7 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
-import * as z from 'zod/v4';
-import axios from 'axios';
+
+import { registerCalculatorTools } from './tools/calculator.js';
+import { registerWeatherTool } from './tools/weather.js';
+import { registerForecastTool } from './tools/forecast.js';
+import { registerServerInfoResource } from './resources/serverInfo.js';
+import { registerWeatherReportPrompt } from './prompts/weatherReport.js';
 
 function createServer(): McpServer {
     const server = new McpServer({
@@ -9,168 +13,20 @@ function createServer(): McpServer {
         version: '1.0.0'
     });
 
-    // Tool 1: Add
-    server.registerTool(
-        'add',
-        {
-            description: 'Add two numbers together',
-            inputSchema: z.object({
-                a: z.number().describe('First number'),
-                b: z.number().describe('Second number')
-            })
-        },
-        async ({ a, b }) => {
-            const result = a + b;
+    // Register calculator tools
+    registerCalculatorTools(server);
 
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `The result is ${result}`
-                    }
-                ]
-            };
-        }
-    );
+    // Register weather tool
+    registerWeatherTool(server);
 
-    // Tool 2: Multiply
-    server.registerTool(
-        'multiply',
-        {
-            description: 'Multiply two numbers together',
-            inputSchema: z.object({
-                a: z.number().describe('First number'),
-                b: z.number().describe('Second number')
-            })
-        },
-        async ({ a, b }) => {
-            const result = a * b;
+    // Register forecast tool
+    registerForecastTool(server);
 
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `The result is ${result}`
-                    }
-                ]
-            };
-        }
-    );
+    // Register resource
+    registerServerInfoResource(server);
 
-    // Tool 3: Get Weather
-    server.registerTool(
-        'get_weather',
-        {
-            description: 'Get detailed current weather information for a city',
-            inputSchema: z.object({
-                city: z.string().describe('Name of the city')
-            })
-        },
-        async ({ city }) => {
-            try {
-                const response = await axios.get(
-                    `https://wttr.in/${encodeURIComponent(city)}?format=j1`
-                );
-
-                const current = response.data.current_condition[0];
-
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text:
-                                `Weather in ${city}:\n` +
-                                `Temperature: ${current.temp_C}°C\n` +
-                                `Feels like: ${current.FeelsLikeC}°C\n` +
-                                `Condition: ${current.weatherDesc[0].value}\n` +
-                                `Humidity: ${current.humidity}%\n` +
-                                `Wind Speed: ${current.windspeedKmph} km/h\n` +
-                                `Visibility: ${current.visibility} km\n` +
-                                `Pressure: ${current.pressure} mb`
-                        }
-                    ]
-                };
-            } catch (error) {
-                return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Could not get weather for ${city}.`
-                        }
-                    ],
-                    isError: true
-                };
-            }
-        }
-    );
-
-    // Resource: Server Information
-    server.registerResource(
-        'server_info',
-        'info://calculator',
-        {
-            description: 'Information about this MCP server',
-            mimeType: 'text/plain'
-        },
-        async () => {
-            return {
-                contents: [
-                    {
-                        uri: 'info://calculator',
-                        mimeType: 'text/plain',
-                        text:
-                            `My Weather Calculator MCP Server\n\n` +
-                            `Available Tools:\n` +
-                            `- add: Add two numbers\n` +
-                            `- multiply: Multiply two numbers\n` +
-                            `- get_weather: Get detailed current weather\n\n` +
-                            `Weather information includes:\n` +
-                            `- Temperature\n` +
-                            `- Feels like temperature\n` +
-                            `- Weather condition\n` +
-                            `- Humidity\n` +
-                            `- Wind speed\n` +
-                            `- Visibility\n` +
-                            `- Atmospheric pressure`
-                    }
-                ]
-            };
-        }
-    );
-
-    // Prompt: Weather Report
-    server.registerPrompt(
-        'weather_report',
-        {
-            title: 'Weather Report',
-            description: 'Create a clear and detailed weather report for a city',
-            argsSchema: z.object({
-                city: z.string().describe('Name of the city')
-            })
-        },
-        ({ city }) => ({
-            messages: [
-                {
-                    role: 'user' as const,
-                    content: {
-                        type: 'text' as const,
-                        text:
-                            `Create a clear and detailed weather report for ${city}.\n\n` +
-                            `Include:\n` +
-                            `- City name\n` +
-                            `- Temperature\n` +
-                            `- Feels like temperature\n` +
-                            `- Weather condition\n` +
-                            `- Humidity\n` +
-                            `- Wind speed\n` +
-                            `- Visibility\n` +
-                            `- Atmospheric pressure\n\n` +
-                            `Keep the report simple and easy to understand.`
-                    }
-                }
-            ]
-        })
-    );
+    // Register prompt
+    registerWeatherReportPrompt(server);
 
     return server;
 }
