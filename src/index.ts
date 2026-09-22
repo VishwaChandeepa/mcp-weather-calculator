@@ -5,7 +5,7 @@ import { registerCalculatorTools } from './tools/calculator.js';
 import { registerWeatherTool } from './tools/weather.js';
 import { registerForecastTool } from './tools/forecast.js';
 import { registerServerInfoResource } from './resources/serverInfo.js';
-import { registerWeatherReportPrompt } from './prompts/weatherReport.js';
+import { registerWeatherReportPrompt } from './prompt/weatherReport.js';
 
 function createServer(): McpServer {
     const server = new McpServer({
