@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 type WeatherData = {
   city: string
+  country: string
   temperature: string
   feelsLike: string
   condition: string
@@ -12,9 +13,18 @@ type WeatherData = {
   pressure: string
 }
 
+type ForecastDay = {
+  date: string
+  minTemperature: string
+  maxTemperature: string
+  averageTemperature: string
+  condition: string
+}
+
 function App() {
   const [city, setCity] = useState('Ginigathena')
   const [weather, setWeather] = useState<WeatherData | null>(null)
+  const [forecast, setForecast] = useState<ForecastDay[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,6 +38,7 @@ function App() {
     setError('')
 
     try {
+      // Get current weather
       const response = await fetch(
         `http://localhost:3000/api/weather?city=${encodeURIComponent(city)}`
       )
@@ -39,10 +50,32 @@ function App() {
       }
 
       setWeather(data)
+
+      // Get 3-day forecast
+      const forecastResponse = await fetch(
+        `http://localhost:3000/api/forecast?city=${encodeURIComponent(city)}&days=3`
+      )
+
+      const forecastData = await forecastResponse.json()
+
+      if (!forecastResponse.ok) {
+        throw new Error(
+          forecastData.error || 'Could not get forecast data'
+        )
+      }
+
+      setForecast(forecastData.forecast)
     } catch (error) {
       console.error(error)
+
       setWeather(null)
-      setError('Could not get weather data. Please check the city name.')
+      setForecast([])
+
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Could not get weather data.'
+      )
     } finally {
       setLoading(false)
     }
@@ -91,7 +124,7 @@ function App() {
                   searchWeather()
                 }
               }}
-              placeholder="Enter a city..."
+              placeholder="Enter any city..."
               className="flex-1 rounded-xl border border-slate-700 bg-slate-900 px-5 py-3 outline-none placeholder:text-slate-500 focus:border-sky-500"
             />
 
@@ -123,6 +156,12 @@ function App() {
               <h2 className="mt-2 text-3xl font-bold">
                 {weather?.city || city || 'Unknown City'}
               </h2>
+
+              {weather?.country && (
+                <p className="mt-1 text-sm text-slate-500">
+                  {weather.country}
+                </p>
+              )}
 
               <div className="mt-6 flex items-center gap-5">
                 <span className="text-7xl">
@@ -187,26 +226,40 @@ function App() {
 
           <div className="grid gap-4 md:grid-cols-3">
 
-            <ForecastCard
-              day="Today"
-              icon={getWeatherIcon(weather?.condition)}
-              condition={weather?.condition || '--'}
-              temperature={weather?.temperature || '--'}
-            />
+            {forecast.length > 0 ? (
+              forecast.map((day, index) => (
+                <ForecastCard
+                  key={day.date}
+                  day={getForecastDayName(day.date, index)}
+                  icon={getWeatherIcon(day.condition)}
+                  condition={day.condition}
+                  temperature={`${day.minTemperature} - ${day.maxTemperature}`}
+                />
+              ))
+            ) : (
+              <>
+                <ForecastCard
+                  day="Today"
+                  icon={getWeatherIcon(weather?.condition)}
+                  condition={weather?.condition || '--'}
+                  temperature={weather?.temperature || '--'}
+                />
 
-            <ForecastCard
-              day="Tomorrow"
-              icon="🌧️"
-              condition="Forecast coming soon"
-              temperature="--"
-            />
+                <ForecastCard
+                  day="Tomorrow"
+                  icon="🌧️"
+                  condition="Search for forecast"
+                  temperature="--"
+                />
 
-            <ForecastCard
-              day="Day 3"
-              icon="🌤️"
-              condition="Forecast coming soon"
-              temperature="--"
-            />
+                <ForecastCard
+                  day="Day 3"
+                  icon="🌤️"
+                  condition="Search for forecast"
+                  temperature="--"
+                />
+              </>
+            )}
 
           </div>
         </section>
@@ -284,6 +337,27 @@ function App() {
 
       </main>
     </div>
+  )
+}
+
+/* Forecast Day Name */
+function getForecastDayName(
+  date: string,
+  index: number
+) {
+  if (index === 0) {
+    return 'Today'
+  }
+
+  if (index === 1) {
+    return 'Tomorrow'
+  }
+
+  return new Date(date).toLocaleDateString(
+    'en-US',
+    {
+      weekday: 'long',
+    }
   )
 }
 
@@ -380,7 +454,7 @@ function ForecastCard({
           {icon}
         </span>
 
-        <span className="text-3xl font-bold">
+        <span className="text-2xl font-bold">
           {temperature}
         </span>
 
@@ -418,3 +492,4 @@ function ToolCard({
 }
 
 export default App
+
