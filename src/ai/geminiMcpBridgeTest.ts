@@ -25,7 +25,7 @@ const weatherTool = {
         },
         required: ['city']
     }
-};
+} as const;
 
 async function main() {
     const transport = new StreamableHTTPClientTransport(

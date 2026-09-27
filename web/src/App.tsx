@@ -28,6 +28,12 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  // AI Assistant state
+  const [aiQuestion, setAiQuestion] = useState('')
+  const [aiAnswer, setAiAnswer] = useState('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
+
   const searchWeather = async () => {
     if (!city.trim()) {
       setError('Please enter a city name.')
@@ -81,28 +87,79 @@ function App() {
     }
   }
 
+  const askAI = async () => {
+    if (!aiQuestion.trim()) {
+      setAiError('Please enter a question.')
+      return
+    }
+
+    setAiLoading(true)
+    setAiError('')
+    setAiAnswer('')
+
+    try {
+      const response = await fetch(
+        'http://localhost:3000/api/ai',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            question: aiQuestion,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.error || 'Could not get AI response'
+        )
+      }
+
+      setAiAnswer(data.answer)
+    } catch (error) {
+      console.error(error)
+
+      setAiError(
+        error instanceof Error
+          ? error.message
+          : 'Could not get AI response.'
+      )
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
+
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/80">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+
           <div>
             <h1 className="text-2xl font-bold">
               🌦️ MCP Weather Intelligence
             </h1>
 
             <p className="mt-1 text-sm text-slate-400">
-              AI-ready weather information powered by MCP
+              AI-powered weather intelligence with MCP
             </p>
           </div>
 
           <div className="flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2">
+
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
 
             <span className="text-sm text-emerald-300">
               MCP Online
             </span>
+
           </div>
+
         </div>
       </header>
 
@@ -110,11 +167,13 @@ function App() {
 
         {/* Search */}
         <section className="mb-8">
+
           <p className="mb-2 text-sm font-medium text-slate-400">
             Search Location
           </p>
 
           <div className="flex max-w-2xl gap-3">
+
             <input
               type="text"
               value={city}
@@ -135,6 +194,7 @@ function App() {
             >
               {loading ? 'Searching...' : 'Search'}
             </button>
+
           </div>
 
           {error && (
@@ -142,13 +202,16 @@ function App() {
               {error}
             </p>
           )}
+
         </section>
 
         {/* Current Weather */}
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-8 shadow-2xl">
+
           <div className="flex flex-col justify-between gap-8 md:flex-row md:items-center">
 
             <div>
+
               <p className="text-sm text-slate-400">
                 Current Weather
               </p>
@@ -164,11 +227,13 @@ function App() {
               )}
 
               <div className="mt-6 flex items-center gap-5">
+
                 <span className="text-7xl">
                   {getWeatherIcon(weather?.condition)}
                 </span>
 
                 <div>
+
                   <p className="text-6xl font-bold">
                     {weather?.temperature || '--'}
                   </p>
@@ -176,8 +241,11 @@ function App() {
                   <p className="mt-2 text-lg text-slate-400">
                     {weather?.condition || 'Search for weather'}
                   </p>
+
                 </div>
+
               </div>
+
             </div>
 
             {/* Weather Statistics */}
@@ -209,12 +277,16 @@ function App() {
               />
 
             </div>
+
           </div>
+
         </section>
 
         {/* Forecast */}
         <section className="mb-8">
+
           <div className="mb-4">
+
             <p className="text-sm text-slate-400">
               Upcoming Weather
             </p>
@@ -222,6 +294,7 @@ function App() {
             <h2 className="text-2xl font-bold">
               3-Day Forecast
             </h2>
+
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
@@ -262,80 +335,166 @@ function App() {
             )}
 
           </div>
+
         </section>
 
-        {/* MCP Tools */}
+        {/* Weather Intelligence */}
         <section className="mb-8 rounded-3xl border border-slate-800 bg-slate-900 p-6">
-          <p className="text-sm text-slate-400">
-            Model Context Protocol
-          </p>
 
-          <h2 className="mt-1 text-2xl font-bold">
-            Available MCP Tools
-          </h2>
+          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
 
-            <ToolCard
-              name="get_weather"
-              description="Current weather"
+              <p className="text-sm font-medium text-sky-400">
+                Weather Intelligence
+              </p>
+
+              <h2 className="mt-1 text-2xl font-bold">
+                Intelligence Capabilities
+              </h2>
+
+              <p className="mt-2 max-w-2xl text-sm text-slate-400">
+                Real-time weather data, forecasting, and AI-powered
+                insights delivered through Model Context Protocol.
+              </p>
+
+            </div>
+
+            <div className="text-sm text-slate-500">
+              Powered by MCP + Gemini
+            </div>
+
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            <CapabilityCard
+              icon="🌤️"
+              name="Current Conditions"
+              description="Real-time weather conditions for any location."
             />
 
-            <ToolCard
-              name="get_forecast"
-              description="Weather forecast"
+            <CapabilityCard
+              icon="📅"
+              name="Forecast Intelligence"
+              description="Multi-day forecasts with temperature and weather trends."
             />
 
-            <ToolCard
-              name="add"
-              description="Add numbers"
+            <CapabilityCard
+              icon="🌧️"
+              name="Precipitation Analysis"
+              description="Understand rain and precipitation conditions."
             />
 
-            <ToolCard
-              name="multiply"
-              description="Multiply numbers"
+            <CapabilityCard
+              icon="🌡️"
+              name="Temperature Trends"
+              description="Analyze temperature changes across forecast periods."
+            />
+
+            <CapabilityCard
+              icon="💨"
+              name="Wind Intelligence"
+              description="Monitor wind speed and atmospheric conditions."
+            />
+
+            <CapabilityCard
+              icon="🤖"
+              name="AI Weather Insights"
+              description="Ask natural-language questions and receive intelligent weather analysis."
             />
 
           </div>
+
         </section>
 
         {/* AI Assistant */}
         <section className="rounded-3xl border border-sky-500/20 bg-gradient-to-br from-sky-500/10 to-indigo-500/10 p-8">
 
           <div className="flex items-center gap-3">
+
             <span className="text-3xl">
               🤖
             </span>
 
             <div>
+
               <h2 className="text-2xl font-bold">
                 AI Weather Assistant
               </h2>
 
               <p className="text-sm text-slate-400">
-                Ask questions using weather information from the MCP server.
+                Ask natural-language questions and let Gemini use
+                weather tools through MCP.
               </p>
+
             </div>
+
           </div>
 
+          {/* AI Input */}
           <div className="mt-6 flex gap-3">
 
             <input
               type="text"
+              value={aiQuestion}
+              onChange={(event) => setAiQuestion(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  askAI()
+                }
+              }}
               placeholder="Ask something about the weather..."
-              className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 outline-none placeholder:text-slate-500 focus:border-sky-500"
+              disabled={aiLoading}
+              className="flex-1 rounded-xl border border-slate-700 bg-slate-950 px-5 py-3 outline-none placeholder:text-slate-500 focus:border-sky-500 disabled:opacity-50"
             />
 
             <button
-              className="rounded-xl bg-sky-500 px-6 py-3 font-semibold hover:bg-sky-400"
+              onClick={askAI}
+              disabled={aiLoading}
+              className="rounded-xl bg-sky-500 px-6 py-3 font-semibold transition hover:bg-sky-400 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Ask AI
+              {aiLoading ? 'Thinking...' : 'Ask AI'}
             </button>
 
           </div>
+
+          {/* AI Error */}
+          {aiError && (
+            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 p-4">
+              <p className="text-sm text-red-400">
+                {aiError}
+              </p>
+            </div>
+          )}
+
+          {/* AI Response */}
+          {aiAnswer && (
+            <div className="mt-6 rounded-2xl border border-slate-700 bg-slate-950 p-6">
+
+              <div className="flex items-center gap-2">
+
+                <span className="text-xl">
+                  ✨
+                </span>
+
+                <p className="text-sm font-semibold text-sky-400">
+                  Gemini Weather Intelligence
+                </p>
+
+              </div>
+
+              <div className="mt-4 whitespace-pre-wrap text-sm leading-7 text-slate-300">
+                {aiAnswer}
+              </div>
+
+            </div>
+          )}
+
         </section>
 
       </main>
+
     </div>
   )
 }
@@ -418,6 +577,7 @@ function WeatherStat({
 }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+
       <p className="text-xs text-slate-500">
         {label}
       </p>
@@ -425,6 +585,7 @@ function WeatherStat({
       <p className="mt-1 text-lg font-semibold">
         {value}
       </p>
+
     </div>
   )
 }
@@ -468,28 +629,41 @@ function ForecastCard({
   )
 }
 
-/* MCP Tool Card */
-function ToolCard({
+/* Weather Intelligence Capability Card */
+function CapabilityCard({
+  icon,
   name,
   description,
 }: {
+  icon: string
   name: string
   description: string
 }) {
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950 p-4">
+    <div className="group rounded-2xl border border-slate-800 bg-slate-950 p-5 transition duration-200 hover:border-sky-500/40 hover:bg-slate-900">
 
-      <p className="font-mono text-sm text-sky-400">
-        {name}
-      </p>
+      <div className="flex items-start gap-4">
 
-      <p className="mt-2 text-sm text-slate-400">
-        {description}
-      </p>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-2xl">
+          {icon}
+        </div>
+
+        <div>
+
+          <h3 className="font-semibold text-white">
+            {name}
+          </h3>
+
+          <p className="mt-2 text-sm leading-6 text-slate-400">
+            {description}
+          </p>
+
+        </div>
+
+      </div>
 
     </div>
   )
 }
 
 export default App
-
