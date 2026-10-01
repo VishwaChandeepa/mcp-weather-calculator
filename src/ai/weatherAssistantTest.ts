@@ -1,11 +1,13 @@
 import { askWeatherAssistant } from './weatherAssistant.js';
 
 async function main() {
+    console.log('Testing Gemini + MCP Weather Assistant...\n');
+
     const response = await askWeatherAssistant(
         'What is the current weather in Kandy?'
     );
 
-    console.log('\nGemini Weather Assistant:\n');
+    console.log('Gemini Weather Assistant:\n');
     console.log(response);
 }
 

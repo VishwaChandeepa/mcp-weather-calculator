@@ -1,20 +1,12 @@
 import { GoogleGenAI } from '@google/genai';
+import { config } from '../config.js';
 
 const ai = new GoogleGenAI({});
 
 async function main() {
     const interaction = await ai.interactions.create({
-        model: 'gemini-3.8-flash',
-
-        input: 'What is the current weather in Kandy?',
-
-        tools: [
-            {
-                type: 'mcp_server',
-                name: 'weather',
-                url: 'http://localhost:3000/mcp'
-            }
-        ]
+        model: config.gemini.model,
+        input: 'Say hello and confirm that the Gemini API is working.'
     });
 
     console.log('\nGemini response:\n');
@@ -22,5 +14,5 @@ async function main() {
 }
 
 main().catch((error) => {
-    console.error('Gemini MCP test failed:', error);
+    console.error('Gemini test failed:', error);
 });
