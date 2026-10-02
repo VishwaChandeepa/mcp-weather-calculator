@@ -6,7 +6,8 @@ export function registerForecastTool(server: McpServer): void {
     server.registerTool(
         'get_forecast',
         {
-            description: 'Get a multi-day weather forecast for a city',
+            description:
+                'Get a detailed multi-day weather forecast including temperature, weather conditions, rain probability, humidity, and wind information.',
             inputSchema: z.object({
                 city: z.string().describe('Name of the city'),
                 days: z
@@ -26,11 +27,48 @@ export function registerForecastTool(server: McpServer): void {
                 const forecast = response.data.weather
                     .slice(0, days)
                     .map((day: any) => {
+                        const hourly = day.hourly ?? [];
+
+                        const rainChance = hourly.length
+                            ? Math.max(
+                                  ...hourly.map(
+                                      (hour: any) =>
+                                          Number(hour.chanceofrain) || 0
+                                  )
+                              )
+                            : 0;
+
+                        const maxHumidity = hourly.length
+                            ? Math.max(
+                                  ...hourly.map(
+                                      (hour: any) =>
+                                          Number(hour.humidity) || 0
+                                  )
+                              )
+                            : 0;
+
+                        const maxWindSpeed = hourly.length
+                            ? Math.max(
+                                  ...hourly.map(
+                                      (hour: any) =>
+                                          Number(hour.windspeedKmph) || 0
+                                  )
+                              )
+                            : 0;
+
+                        const condition =
+                            hourly[0]?.weatherDesc?.[0]?.value ??
+                            'Unknown';
+
                         return (
                             `Date: ${day.date}\n` +
                             `Minimum Temperature: ${day.mintempC}°C\n` +
                             `Maximum Temperature: ${day.maxtempC}°C\n` +
-                            `Average Temperature: ${day.avgtempC}°C`
+                            `Average Temperature: ${day.avgtempC}°C\n` +
+                            `Weather Condition: ${condition}\n` +
+                            `Maximum Rain Probability: ${rainChance}%\n` +
+                            `Maximum Humidity: ${maxHumidity}%\n` +
+                            `Maximum Wind Speed: ${maxWindSpeed} km/h`
                         );
                     })
                     .join('\n\n');
@@ -39,7 +77,7 @@ export function registerForecastTool(server: McpServer): void {
                     content: [
                         {
                             type: 'text',
-                            text: `Weather Forecast for ${city}\n\n${forecast}`
+                            text: `Detailed Weather Forecast for ${city}\n\n${forecast}`
                         }
                     ]
                 };

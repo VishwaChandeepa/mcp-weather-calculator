@@ -4,7 +4,7 @@ async function main() {
     console.log('Testing Gemini + MCP Weather Assistant...\n');
 
     const response = await askWeatherAssistant(
-        'What is the current weather in Kandy?'
+        'Will it rain in Kandy tomorrow? What is the maximum rain probability and what weather conditions are expected?'
     );
 
     console.log('Gemini Weather Assistant:\n');

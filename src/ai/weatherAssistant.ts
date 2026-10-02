@@ -1,8 +1,10 @@
+
 import { GoogleGenAI } from '@google/genai';
 import {
     Client,
     StreamableHTTPClientTransport
 } from '@modelcontextprotocol/client';
+import { config } from '../config.js';
 
 const ai = new GoogleGenAI({});
 
@@ -22,6 +24,31 @@ const weatherTool = {
     }
 } as const;
 
+const forecastTool = {
+    type: 'function',
+    name: 'get_forecast',
+    description:
+        'Get a detailed multi-day weather forecast including temperature, weather conditions, rain probability, humidity, and wind information.',
+    parameters: {
+        type: 'object',
+        properties: {
+            city: {
+                type: 'string',
+                description: 'Name of the city'
+            },
+            days: {
+                type: 'integer',
+                description: 'Number of forecast days, from 1 to 3',
+                minimum: 1,
+                maximum: 3
+            }
+        },
+        required: ['city', 'days']
+    }
+} as const;
+
+const weatherTools = [weatherTool, forecastTool];
+
 export async function askWeatherAssistant(
     question: string
 ): Promise<string> {
@@ -31,23 +58,26 @@ export async function askWeatherAssistant(
     });
 
     const transport = new StreamableHTTPClientTransport(
-        new URL('http://localhost:3000/mcp')
+        new URL(config.mcp.url)
     );
 
     try {
         await mcpClient.connect(transport);
 
         const interaction = await ai.interactions.create({
-            model: 'gemini-3.8-flash',
+            model: config.gemini.model,
             input: question,
-            tools: [weatherTool]
+            tools: weatherTools
         });
 
         const functionCall = interaction.steps.find(
             (step) => step.type === 'function_call'
         );
 
-        if (!functionCall || functionCall.type !== 'function_call') {
+        if (
+            !functionCall ||
+            functionCall.type !== 'function_call'
+        ) {
             return (
                 interaction.output_text ??
                 'I could not generate a response.'
@@ -60,9 +90,9 @@ export async function askWeatherAssistant(
         });
 
         const finalInteraction = await ai.interactions.create({
-            model: 'gemini-3.8-flash',
+            model: config.gemini.model,
             previous_interaction_id: interaction.id,
-            tools: [weatherTool],
+            tools: weatherTools,
             input: [
                 {
                     type: 'function_result',
@@ -86,3 +116,4 @@ export async function askWeatherAssistant(
         await mcpClient.close();
     }
 }
+

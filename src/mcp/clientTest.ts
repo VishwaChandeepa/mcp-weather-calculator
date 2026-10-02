@@ -27,7 +27,7 @@ async function main() {
 
     console.log('\nCalling get_weather...');
 
-    const result = await client.callTool({
+    const weatherResult = await client.callTool({
         name: 'get_weather',
         arguments: {
             city: 'Kandy'
@@ -35,7 +35,20 @@ async function main() {
     });
 
     console.log('\nWeather result:');
-    console.dir(result, { depth: null });
+    console.dir(weatherResult, { depth: null });
+
+    console.log('\nCalling get_forecast...');
+
+    const forecastResult = await client.callTool({
+        name: 'get_forecast',
+        arguments: {
+            city: 'Kandy',
+            days: 3
+        }
+    });
+
+    console.log('\nForecast result:');
+    console.dir(forecastResult, { depth: null });
 
     await client.close();
 }
