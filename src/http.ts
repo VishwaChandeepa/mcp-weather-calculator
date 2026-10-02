@@ -254,7 +254,7 @@ const httpServer = createHttpServer(
                 const location =
                     await geocodeCity(city);
 
-                // Step 2: Get forecast
+                // Step 2: Get richer forecast data
                 const response =
                     await axios.get(
                         'https://api.open-meteo.com/v1/forecast',
@@ -264,10 +264,13 @@ const httpServer = createHttpServer(
                                     location.latitude,
                                 longitude:
                                     location.longitude,
+
                                 daily:
-                                    'temperature_2m_min,temperature_2m_max,temperature_2m_mean,weather_code',
+                                    'temperature_2m_min,temperature_2m_max,temperature_2m_mean,precipitation_probability_max,relative_humidity_2m_mean,wind_speed_10m_max,weather_code',
+
                                 forecast_days:
                                     days,
+
                                 timezone: 'auto'
                             }
                         }
@@ -298,7 +301,16 @@ const httpServer = createHttpServer(
                                     daily.weather_code[
                                         index
                                     ]
-                                )
+                                ),
+
+                            rainProbability:
+                                `${daily.precipitation_probability_max[index]}%`,
+
+                            humidity:
+                                `${daily.relative_humidity_2m_mean[index]}%`,
+
+                            windSpeed:
+                                `${daily.wind_speed_10m_max[index]} km/h`
                         })
                     );
 
