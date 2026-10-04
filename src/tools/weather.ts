@@ -1,6 +1,8 @@
+
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import axios from 'axios';
+import { config } from '../config.js';
 
 export function registerWeatherTool(server: McpServer): void {
     server.registerTool(
@@ -14,7 +16,10 @@ export function registerWeatherTool(server: McpServer): void {
         async ({ city }) => {
             try {
                 const response = await axios.get(
-                    `https://wttr.in/${encodeURIComponent(city)}?format=j1`
+                    `https://wttr.in/${encodeURIComponent(city)}?format=j1`,
+                    {
+                        timeout: config.weather.requestTimeout
+                    }
                 );
 
                 const current = response.data.current_condition[0];

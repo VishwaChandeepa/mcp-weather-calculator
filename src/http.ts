@@ -8,9 +8,16 @@ import axios from 'axios';
 import { registerCalculatorTools } from './tools/calculator.js';
 import { registerWeatherTool } from './tools/weather.js';
 import { registerForecastTool } from './tools/forecast.js';
+import { registerIntelligenceTool} from './tools/intelligence.js';
 import { registerServerInfoResource } from './resources/serverInfo.js';
 import { registerWeatherReportPrompt } from './prompt/weatherReport.js';
 import { askWeatherAssistant } from './ai/weatherAssistant.js';
+import { config } from './config.js';
+
+import {
+    analyzeWeather,
+    type WeatherForecastDay
+} from './intelligence/weatherIntelligence.js';
 
 type LocationData = {
     name: string;
@@ -30,11 +37,14 @@ async function geocodeCity(
                 count: 1,
                 language: 'en',
                 format: 'json'
-            }
+            },
+            timeout:
+                config.weather.requestTimeout
         }
     );
 
-    const result = response.data.results?.[0];
+    const result =
+        response.data.results?.[0];
 
     if (!result) {
         throw new Error('City not found');
@@ -57,6 +67,7 @@ function createMcpServer(): McpServer {
     registerCalculatorTools(server);
     registerWeatherTool(server);
     registerForecastTool(server);
+    registerIntelligenceTool(server);
     registerServerInfoResource(server);
     registerWeatherReportPrompt(server);
 
@@ -87,15 +98,21 @@ const httpServer = createHttpServer(
         // Browser Weather API
         // =====================================================
 
-        if (req.url?.startsWith('/api/weather')) {
+        if (
+            req.url?.startsWith('/api/weather') &&
+            req.method === 'GET'
+        ) {
             try {
-                const requestUrl = new URL(
-                    req.url,
-                    'http://localhost:3000'
-                );
+                const requestUrl =
+                    new URL(
+                        req.url,
+                        `http://localhost:${config.server.port}`
+                    );
 
                 const city =
-                    requestUrl.searchParams.get('city');
+                    requestUrl.searchParams.get(
+                        'city'
+                    );
 
                 if (!city) {
                     res.writeHead(400, {
@@ -107,7 +124,8 @@ const httpServer = createHttpServer(
 
                     res.end(
                         JSON.stringify({
-                            error: 'City is required'
+                            error:
+                                'City is required'
                         })
                     );
 
@@ -126,12 +144,19 @@ const httpServer = createHttpServer(
                             params: {
                                 latitude:
                                     location.latitude,
+
                                 longitude:
                                     location.longitude,
+
                                 current:
                                     'temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,visibility,surface_pressure,weather_code',
-                                timezone: 'auto'
-                            }
+
+                                timezone:
+                                    'auto'
+                            },
+
+                            timeout:
+                                config.weather.requestTimeout
                         }
                     );
 
@@ -139,22 +164,32 @@ const httpServer = createHttpServer(
                     response.data.current;
 
                 const weather = {
-                    city: location.name,
-                    country: location.country,
+                    city:
+                        location.name,
+
+                    country:
+                        location.country,
+
                     temperature:
                         `${current.temperature_2m}°C`,
+
                     feelsLike:
                         `${current.apparent_temperature}°C`,
+
                     condition:
                         getWeatherCondition(
                             current.weather_code
                         ),
+
                     humidity:
                         `${current.relative_humidity_2m}%`,
+
                     windSpeed:
                         `${current.wind_speed_10m} km/h`,
+
                     visibility:
                         `${current.visibility / 1000} km`,
+
                     pressure:
                         `${current.surface_pressure} hPa`
                 };
@@ -162,6 +197,7 @@ const httpServer = createHttpServer(
                 res.writeHead(200, {
                     'Content-Type':
                         'application/json',
+
                     'Access-Control-Allow-Origin':
                         '*'
                 });
@@ -171,11 +207,15 @@ const httpServer = createHttpServer(
                 );
 
             } catch (error) {
-                console.error(error);
+                console.error(
+                    'Weather API error:',
+                    error
+                );
 
                 res.writeHead(404, {
                     'Content-Type':
                         'application/json',
+
                     'Access-Control-Allow-Origin':
                         '*'
                 });
@@ -195,33 +235,42 @@ const httpServer = createHttpServer(
         // Browser Forecast API
         // =====================================================
 
-        if (req.url?.startsWith('/api/forecast')) {
+        if (
+            req.url?.startsWith('/api/forecast') &&
+            req.method === 'GET'
+        ) {
             try {
-                const requestUrl = new URL(
-                    req.url,
-                    'http://localhost:3000'
-                );
+                const requestUrl =
+                    new URL(
+                        req.url,
+                        `http://localhost:${config.server.port}`
+                    );
 
                 const city =
-                    requestUrl.searchParams.get('city');
-
-                const days = Number(
                     requestUrl.searchParams.get(
-                        'days'
-                    ) || '3'
-                );
+                        'city'
+                    );
+
+                const days =
+                    Number(
+                        requestUrl.searchParams.get(
+                            'days'
+                        ) || '3'
+                    );
 
                 if (!city) {
                     res.writeHead(400, {
                         'Content-Type':
                             'application/json',
+
                         'Access-Control-Allow-Origin':
                             '*'
                     });
 
                     res.end(
                         JSON.stringify({
-                            error: 'City is required'
+                            error:
+                                'City is required'
                         })
                     );
 
@@ -236,6 +285,7 @@ const httpServer = createHttpServer(
                     res.writeHead(400, {
                         'Content-Type':
                             'application/json',
+
                         'Access-Control-Allow-Origin':
                             '*'
                     });
@@ -254,7 +304,7 @@ const httpServer = createHttpServer(
                 const location =
                     await geocodeCity(city);
 
-                // Step 2: Get richer forecast data
+                // Step 2: Get forecast data
                 const response =
                     await axios.get(
                         'https://api.open-meteo.com/v1/forecast',
@@ -262,6 +312,7 @@ const httpServer = createHttpServer(
                             params: {
                                 latitude:
                                     location.latitude,
+
                                 longitude:
                                     location.longitude,
 
@@ -271,8 +322,12 @@ const httpServer = createHttpServer(
                                 forecast_days:
                                     days,
 
-                                timezone: 'auto'
-                            }
+                                timezone:
+                                    'auto'
+                            },
+
+                            timeout:
+                                config.weather.requestTimeout
                         }
                     );
 
@@ -317,24 +372,33 @@ const httpServer = createHttpServer(
                 res.writeHead(200, {
                     'Content-Type':
                         'application/json',
+
                     'Access-Control-Allow-Origin':
                         '*'
                 });
 
                 res.end(
                     JSON.stringify({
-                        city: location.name,
-                        country: location.country,
+                        city:
+                            location.name,
+
+                        country:
+                            location.country,
+
                         forecast
                     })
                 );
 
             } catch (error) {
-                console.error(error);
+                console.error(
+                    'Forecast API error:',
+                    error
+                );
 
                 res.writeHead(404, {
                     'Content-Type':
                         'application/json',
+
                     'Access-Control-Allow-Origin':
                         '*'
                 });
@@ -343,6 +407,195 @@ const httpServer = createHttpServer(
                     JSON.stringify({
                         error:
                             'City not found. Please enter a valid city name.'
+                    })
+                );
+            }
+
+            return;
+        }
+
+        // =====================================================
+        // Weather Intelligence API
+        // =====================================================
+
+        if (
+            req.url?.startsWith(
+                '/api/intelligence'
+            ) &&
+            req.method === 'GET'
+        ) {
+            try {
+                const requestUrl =
+                    new URL(
+                        req.url,
+                        `http://localhost:${config.server.port}`
+                    );
+
+                const city =
+                    requestUrl.searchParams.get(
+                        'city'
+                    );
+
+                if (!city) {
+                    res.writeHead(400, {
+                        'Content-Type':
+                            'application/json',
+
+                        'Access-Control-Allow-Origin':
+                            '*'
+                    });
+
+                    res.end(
+                        JSON.stringify({
+                            error:
+                                'City is required'
+                        })
+                    );
+
+                    return;
+                }
+
+                // Step 1: Find city coordinates
+                const location =
+                    await geocodeCity(city);
+
+                // Step 2: Get current temperature
+                // and tomorrow's forecast
+                const response =
+                    await axios.get(
+                        'https://api.open-meteo.com/v1/forecast',
+                        {
+                            params: {
+                                latitude:
+                                    location.latitude,
+
+                                longitude:
+                                    location.longitude,
+
+                                current:
+                                    'temperature_2m,weather_code',
+
+                                daily:
+                                    'temperature_2m_min,temperature_2m_max,temperature_2m_mean,precipitation_probability_max,relative_humidity_2m_mean,wind_speed_10m_max,weather_code',
+
+                                forecast_days:
+                                    2,
+
+                                timezone:
+                                    'auto'
+                            },
+
+                            timeout:
+                                config.weather.requestTimeout
+                        }
+                    );
+
+                const current =
+                    response.data.current;
+
+                const daily =
+                    response.data.daily;
+
+                // Step 3: Convert tomorrow's
+                // raw API data into our intelligence model
+                const forecast:
+                    WeatherForecastDay = {
+                    date:
+                        daily.time[1],
+
+                    minTemperature:
+                        Number(
+                            daily
+                                .temperature_2m_min[1]
+                        ),
+
+                    maxTemperature:
+                        Number(
+                            daily
+                                .temperature_2m_max[1]
+                        ),
+
+                    averageTemperature:
+                        Number(
+                            daily
+                                .temperature_2m_mean[1]
+                        ),
+
+                    condition:
+                        getWeatherCondition(
+                            Number(
+                                daily
+                                    .weather_code[1]
+                            )
+                        ),
+
+                    rainProbability:
+                        Number(
+                            daily
+                                .precipitation_probability_max[1]
+                        ),
+
+                    humidity:
+                        Number(
+                            daily
+                                .relative_humidity_2m_mean[1]
+                        ),
+
+                    windSpeed:
+                        Number(
+                            daily
+                                .wind_speed_10m_max[1]
+                        )
+                };
+
+                // Step 4: Run Weather Intelligence
+                const intelligence =
+                    analyzeWeather(
+                        Number(
+                            current.temperature_2m
+                        ),
+                        forecast
+                    );
+
+                // Step 5: Return intelligence
+                res.writeHead(200, {
+                    'Content-Type':
+                        'application/json',
+
+                    'Access-Control-Allow-Origin':
+                        '*'
+                });
+
+                res.end(
+                    JSON.stringify({
+                        city:
+                            location.name,
+
+                        country:
+                            location.country,
+
+                        intelligence
+                    })
+                );
+
+            } catch (error) {
+                console.error(
+                    'Weather Intelligence API error:',
+                    error
+                );
+
+                res.writeHead(500, {
+                    'Content-Type':
+                        'application/json',
+
+                    'Access-Control-Allow-Origin':
+                        '*'
+                });
+
+                res.end(
+                    JSON.stringify({
+                        error:
+                            'Could not analyze weather intelligence.'
                     })
                 );
             }
@@ -360,83 +613,104 @@ const httpServer = createHttpServer(
         ) {
             let body = '';
 
-            req.on('data', (chunk) => {
-                body += chunk.toString();
-            });
+            req.on(
+                'data',
+                (chunk) => {
+                    body +=
+                        chunk.toString();
+                }
+            );
 
-            req.on('end', async () => {
-                try {
-                    const data =
-                        JSON.parse(body);
+            req.on(
+                'end',
+                async () => {
+                    try {
+                        const data =
+                            JSON.parse(body);
 
-                    const question =
-                        data.question;
+                        const question =
+                            data.question;
 
-                    if (
-                        typeof question !==
-                            'string' ||
-                        !question.trim()
-                    ) {
-                        res.writeHead(400, {
+                        // Validate question
+                        if (
+                            typeof question !==
+                                'string' ||
+                            !question.trim()
+                        ) {
+                            res.writeHead(400, {
+                                'Content-Type':
+                                    'application/json',
+
+                                'Access-Control-Allow-Origin':
+                                    '*'
+                            });
+
+                            res.end(
+                                JSON.stringify({
+                                    error:
+                                        'Question is required'
+                                })
+                            );
+
+                            return;
+                        }
+
+                        const trimmedQuestion =
+                            question.trim();
+
+                        console.error(
+                            `AI Weather Assistant question: ${trimmedQuestion}`
+                        );
+
+                        // Send question to
+                        // Gemini + MCP
+                        const answer =
+                            await askWeatherAssistant(
+                                trimmedQuestion
+                            );
+
+                        // Return successful response
+                        res.writeHead(200, {
                             'Content-Type':
                                 'application/json',
+
                             'Access-Control-Allow-Origin':
                                 '*'
                         });
 
                         res.end(
                             JSON.stringify({
-                                error:
-                                    'Question is required'
+                                answer
                             })
                         );
 
-                        return;
-                    }
-
-                    console.error(
-                        `AI Weather Assistant question: ${question}`
-                    );
-
-                    const answer =
-                        await askWeatherAssistant(
-                            question
+                    } catch (error) {
+                        // Keep detailed error in
+                        // server logs
+                        console.error(
+                            'AI Weather Assistant error:',
+                            error
                         );
 
-                    res.writeHead(200, {
-                        'Content-Type':
-                            'application/json',
-                        'Access-Control-Allow-Origin':
-                            '*'
-                    });
+                        // Return safe message
+                        // to browser
+                        res.writeHead(500, {
+                            'Content-Type':
+                                'application/json',
 
-                    res.end(
-                        JSON.stringify({
-                            answer
-                        })
-                    );
+                            'Access-Control-Allow-Origin':
+                                '*'
+                            });
 
-                } catch (error) {
-                    console.error(
-                        'AI Weather Assistant error:',
-                        error
-                    );
-
-                    res.writeHead(500, {
-                        'Content-Type':
-                            'application/json',
-                        'Access-Control-Allow-Origin':
-                            '*'
-                    });
-
-                    res.end(
-                        JSON.stringify({
-                            error:
-                                'Could not generate an AI weather response.'
-                        })
-                    );
+                        res.end(
+                            JSON.stringify({
+                                error:
+                                    'Could not generate an AI weather response.'
+                            })
+                        );
+                    }
                 }
-            });
+            );
 
             return;
         }
@@ -480,7 +754,6 @@ const httpServer = createHttpServer(
 function getWeatherCondition(
     code: number
 ): string {
-
     if (code === 0) {
         return 'Clear sky';
     }
@@ -545,22 +818,28 @@ function getWeatherCondition(
 // Start HTTP Server
 // =========================================================
 
-httpServer.listen(3000, () => {
+httpServer.listen(
+    config.server.port,
+    () => {
+        console.error(
+            `MCP HTTP server running on http://localhost:${config.server.port}/mcp`
+        );
 
-    console.error(
-        'MCP HTTP server running on http://localhost:3000/mcp'
-    );
+        console.error(
+            `Weather API running on http://localhost:${config.server.port}/api/weather`
+        );
 
-    console.error(
-        'Weather API running on http://localhost:3000/api/weather'
-    );
+        console.error(
+            `Forecast API running on http://localhost:${config.server.port}/api/forecast`
+        );
 
-    console.error(
-        'Forecast API running on http://localhost:3000/api/forecast'
-    );
+        console.error(
+            `Intelligence API running on http://localhost:${config.server.port}/api/intelligence`
+        );
 
-    console.error(
-        'AI API running on http://localhost:3000/api/ai'
-    );
-});
+        console.error(
+            `AI API running on http://localhost:${config.server.port}/api/ai`
+        );
+    }
+);
 
