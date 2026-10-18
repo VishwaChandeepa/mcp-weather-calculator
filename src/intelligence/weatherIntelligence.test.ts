@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+import { describe, expect, it } from 'vitest';
 
 import {
     calculateRainRisk,
@@ -12,159 +12,155 @@ import {
     type WeatherForecastDay
 } from './weatherIntelligence.js';
 
-console.log(
-    'Running Weather Intelligence automated tests...\n'
-);
+describe('Weather Intelligence', () => {
 
-// 1. Very High Rain Risk
-assert.equal(
-    calculateRainRisk(90),
-    'Very High'
-);
+    describe('Rain Risk', () => {
 
-// 2. Moderate Rain Risk
-assert.equal(
-    calculateRainRisk(45),
-    'Moderate'
-);
+        it('should detect very high rain risk', () => {
+            expect(
+                calculateRainRisk(90)
+            ).toBe('Very High');
+        });
 
-// 3. Low Heat Risk
-assert.equal(
-    calculateHeatRisk(28),
-    'Low'
-);
+        it('should detect moderate rain risk', () => {
+            expect(
+                calculateRainRisk(45)
+            ).toBe('Moderate');
+        });
 
-// 4. Moderate Heat Risk
-assert.equal(
-    calculateHeatRisk(32),
-    'Moderate'
-);
+    });
 
-// 5. High Heat Risk
-assert.equal(
-    calculateHeatRisk(37),
-    'High'
-);
+    describe('Heat Risk', () => {
 
-// 6. Extreme Heat Risk
-assert.equal(
-    calculateHeatRisk(42),
-    'Extreme'
-);
+        it('should detect low heat risk', () => {
+            expect(
+                calculateHeatRisk(28)
+            ).toBe('Low');
+        });
 
-// 7. High Wind Risk
-assert.equal(
-    calculateWindRisk(45),
-    'High'
-);
+        it('should detect moderate heat risk', () => {
+            expect(
+                calculateHeatRisk(32)
+            ).toBe('Moderate');
+        });
 
-// 8. High Humidity
-assert.equal(
-    calculateHumidityLevel(90),
-    'High'
-);
+        it('should detect high heat risk', () => {
+            expect(
+                calculateHeatRisk(37)
+            ).toBe('High');
+        });
 
-// 9. Warming Temperature
-assert.equal(
-    calculateTemperatureTrend(23, 27),
-    'Warming'
-);
+        it('should detect extreme heat risk', () => {
+            expect(
+                calculateHeatRisk(42)
+            ).toBe('Extreme');
+        });
 
-// 10. Cooling Temperature
-assert.equal(
-    calculateTemperatureTrend(23, 20),
-    'Cooling'
-);
+    });
 
-// 11. Thunderstorm Detection
-assert.equal(
-    detectSevereWeather('Thunderstorm'),
-    true
-);
+    describe('Temperature Trend', () => {
 
-// 12. Outdoor Activity - Very High Rain
-assert.equal(
-    calculateOutdoorActivity(
-        'Very High',
-        'Low',
-        false
-    ),
-    'Not Recommended'
-);
+        it('should detect warming temperature', () => {
+            expect(
+                calculateTemperatureTrend(23, 27)
+            ).toBe('Warming');
+        });
 
-// 13. Outdoor Activity - Moderate Conditions
-assert.equal(
-    calculateOutdoorActivity(
-        'Moderate',
-        'Low',
-        false
-    ),
-    'Recommended'
-);
+        it('should detect cooling temperature', () => {
+            expect(
+                calculateTemperatureTrend(23, 20)
+            ).toBe('Cooling');
+        });
 
-// 14. Complete Weather Intelligence Analysis
-const forecast: WeatherForecastDay = {
-    date: '2026-10-03',
-    minTemperature: 21,
-    maxTemperature: 37,
-    averageTemperature: 24,
-    condition: 'Rain',
-    rainProbability: 90,
-    humidity: 85,
-    windSpeed: 10
-};
+    });
 
-const intelligence =
-    analyzeWeather(
-        23,
-        forecast
-    );
+    describe('Wind Risk', () => {
 
-assert.deepEqual(
-    intelligence,
-    {
-        rainRisk: 'Very High',
-        heatRisk: 'High',
-        temperatureTrend: 'Stable',
-        windRisk: 'Low',
-        humidityLevel: 'High',
-        severeWeather: false,
-        outdoorActivity: 'Not Recommended'
-    }
-);
+        it('should detect high wind risk', () => {
+            expect(
+                calculateWindRisk(45)
+            ).toBe('High');
+        });
 
-console.log(
-    '✓ Rain risk tests passed'
-);
+    });
 
-console.log(
-    '✓ Heat risk tests passed'
-);
+    describe('Humidity', () => {
 
-console.log(
-    '✓ Temperature trend tests passed'
-);
+        it('should detect high humidity', () => {
+            expect(
+                calculateHumidityLevel(90)
+            ).toBe('High');
+        });
 
-console.log(
-    '✓ Wind risk tests passed'
-);
+    });
 
-console.log(
-    '✓ Humidity tests passed'
-);
+    describe('Severe Weather', () => {
 
-console.log(
-    '✓ Severe weather tests passed'
-);
+        it('should detect thunderstorms', () => {
+            expect(
+                detectSevereWeather('Thunderstorm')
+            ).toBe(true);
+        });
 
-console.log(
-    '✓ Outdoor activity tests passed'
-);
+    });
 
-console.log(
-    '✓ Complete intelligence analysis passed'
-);
+    describe('Outdoor Activity', () => {
 
-console.log(
-    '\nAll Weather Intelligence tests passed successfully! 🎉'
-);
+        it('should not recommend outdoor activity during very high rain risk', () => {
+            expect(
+                calculateOutdoorActivity(
+                    'Very High',
+                    'Low',
+                    false
+                )
+            ).toBe('Not Recommended');
+        });
+
+        it('should recommend outdoor activity during moderate conditions', () => {
+            expect(
+                calculateOutdoorActivity(
+                    'Moderate',
+                    'Low',
+                    false
+                )
+            ).toBe('Recommended');
+        });
+
+    });
+
+    describe('Complete Weather Intelligence Analysis', () => {
+
+        it('should correctly analyze a complete weather forecast', () => {
+
+            const forecast: WeatherForecastDay = {
+                date: '2026-10-03',
+                minTemperature: 21,
+                maxTemperature: 37,
+                averageTemperature: 24,
+                condition: 'Rain',
+                rainProbability: 90,
+                humidity: 85,
+                windSpeed: 10
+            };
+
+            const intelligence =
+                analyzeWeather(
+                    23,
+                    forecast
+                );
+
+            expect(intelligence).toEqual({
+                rainRisk: 'Very High',
+                heatRisk: 'High',
+                temperatureTrend: 'Stable',
+                windRisk: 'Low',
+                humidityLevel: 'High',
+                severeWeather: false,
+                outdoorActivity: 'Not Recommended'
+            });
+
+        });
+
+    });
+
+});

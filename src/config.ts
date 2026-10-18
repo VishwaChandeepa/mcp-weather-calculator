@@ -1,3 +1,4 @@
+
 import 'dotenv/config';
 
 function getRequiredEnv(
@@ -36,6 +37,9 @@ export const config = {
         model: getRequiredEnv(
             'GEMINI_MODEL',
             'gemini-3.5-flash-lite'
+        ),
+        apiKey: getRequiredEnv(
+            'GEMINI_API_KEY'
         )
     },
 
@@ -46,5 +50,13 @@ export const config = {
                 '10000'
             )
         )
+    },
+
+    cors: {
+        frontendUrl: getRequiredEnv(
+            'FRONTEND_URL',
+            'http://localhost:5173'
+        )
     }
 } as const;
+
