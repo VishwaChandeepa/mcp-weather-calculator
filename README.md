@@ -1,609 +1,275 @@
-# 🌦️ MCP Weather & Calculator Server
+# 🌦️ MCP Weather & AI Assistant
 
-> A modular **Model Context Protocol (MCP)** server that combines mathematical utilities with real-time weather intelligence.
+A TypeScript project exploring the **Model Context Protocol (MCP)** by connecting weather tools, forecasts, and an AI-powered weather assistant.
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5%2B-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![MCP](https://img.shields.io/badge/MCP-2.0-purple)](https://modelcontextprotocol.io/)
-[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green?logo=node.js)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+The project combines real-time weather data, weather forecasts, AI integration, and modular MCP tools to demonstrate how AI applications can interact with external services.
 
-## 🚀 Overview
+## ✨ Features
 
-**MCP Weather & Calculator Server** is a modular TypeScript implementation of the **Model Context Protocol (MCP)**.
+* 🌤️ **Current Weather** — Retrieve weather information for a city.
+* 📅 **Weather Forecasts** — Get forecasts for 1–3 days.
+* 🤖 **AI Weather Assistant** — Use Google Gemini to answer weather-related questions.
+* 🧠 **Weather Intelligence** — Analyze weather information to support weather-related decisions.
+* 🔌 **MCP Integration** — Expose tools and capabilities through the Model Context Protocol.
+* 🌐 **HTTP API** — Provide HTTP endpoints for weather information and AI functionality.
+* ➕ **Calculator Tools** — Include basic mathematical operations.
+* ✅ **Input Validation** — Validate inputs and handle errors.
+* 🧪 **Automated Testing** — Test application functionality using Vitest.
 
-The project demonstrates how an AI application can interact with external capabilities through structured **Tools, Resources, and Prompts**.
+## 🛠️ Technology Stack
 
-Instead of putting everything into one large file, the server is organized into independent modules, making it easier to understand, maintain, test, and extend.
+* **Language:** TypeScript
+* **Runtime:** Node.js
+* **AI Integration:** Google Gemini
+* **Protocol:** Model Context Protocol (MCP)
+* **Weather Data:** Open-Meteo APIs
+* **HTTP Requests:** Axios
+* **Validation:** Zod
+* **Testing:** Vitest
+* **Version Control:** Git and GitHub
 
-### 💡 What can it do?
+## 🏗️ Architecture
 
-The server can:
-
-* ➕ Add numbers
-* ✖️ Multiply numbers
-* 🌡️ Retrieve real-time weather information
-* 📅 Retrieve multi-day weather forecasts
-* 📚 Expose server information through an MCP Resource
-* 🤖 Generate structured weather-report instructions through an MCP Prompt
-
----
-
-# ✨ Features
-
-| Feature                         | Description                                  |
-| ------------------------------- | -------------------------------------------- |
-| ➕ **Add Tool**                  | Adds two numbers                             |
-| ✖️ **Multiply Tool**            | Multiplies two numbers                       |
-| 🌤️ **Weather Tool**            | Retrieves detailed current weather           |
-| 📅 **Forecast Tool**            | Retrieves forecasts for up to 3 days         |
-| 📚 **Server Resource**          | Provides information about the MCP server    |
-| 🤖 **Weather Prompt**           | Generates a structured weather-report prompt |
-| 🧩 **Modular Architecture**     | Separates tools, resources, and prompts      |
-| 🔍 **MCP Inspector**            | Provides an interactive testing environment  |
-| 🔒 **Input Validation**         | Uses Zod schemas for structured inputs       |
-| 🌐 **External API Integration** | Uses `wttr.in` for weather data              |
-
----
-
-# 🧠 Understanding the MCP Architecture
-
-This project demonstrates the three important MCP concepts:
-
-### 🔧 Tools
-
-Tools are executable functions that an AI client can call.
-
-This server provides:
+The project follows a modular architecture that separates the AI assistant, MCP tools, weather intelligence, and HTTP API.
 
 ```text
-add
-multiply
-get_weather
-get_forecast
+                    User
+                     |
+                     v
+             AI Weather Assistant
+                     |
+                     v
+                Google Gemini
+                     |
+                     v
+                  MCP Client
+                     |
+                     v
+                  MCP Server
+                     |
+          +----------+----------+
+          |          |          |
+          v          v          v
+       Current    Forecast   Intelligence
+       Weather     Tools        Tools
+          |          |          |
+          +----------+----------+
+                     |
+                     v
+              Open-Meteo APIs
+                     |
+                     v
+               Weather Data
 ```
 
-For example:
+The AI assistant uses weather information returned by the available tools to produce weather-related responses. Validation logic helps reduce unsupported weather claims.
 
-```text
-AI Client
-    │
-    ▼
-get_weather("Ginigathena")
-    │
-    ▼
-MCP Server
-    │
-    ▼
-wttr.in API
-    │
-    ▼
-Weather Data
-```
+## 🌤️ Weather Features
 
----
+### Current Weather
 
-### 📚 Resources
+Retrieve information such as:
 
-Resources provide information that an MCP client can read.
+* Temperature
+* Feels-like temperature
+* Weather conditions
+* Humidity
+* Precipitation
+* Wind speed and direction
+* Visibility
+* Atmospheric pressure
 
-This project exposes:
+### Weather Forecast
 
-```text
-info://calculator
-```
+Retrieve forecasts for up to three days, including:
 
-The resource contains information about:
-
-* Available tools
-* Weather capabilities
-* Forecast capabilities
-* Server functionality
-
----
-
-### 🤖 Prompts
-
-Prompts provide reusable instructions that can be requested by an MCP client.
-
-This project provides:
-
-```text
-weather_report
-```
-
-Example:
-
-```text
-weather_report("Ginigathena")
-```
-
-The prompt asks the AI to create a simple weather report containing important weather information.
-
----
-
-# 🛠️ Available Tools
-
-## ➕ `add`
-
-Adds two numbers.
-
-### Input
-
-```json
-{
-  "a": 10,
-  "b": 20
-}
-```
-
-### Result
-
-```text
-The result is 30
-```
-
----
-
-## ✖️ `multiply`
-
-Multiplies two numbers.
-
-### Input
-
-```json
-{
-  "a": 10,
-  "b": 5
-}
-```
-
-### Result
-
-```text
-The result is 50
-```
-
----
-
-## 🌤️ `get_weather`
-
-Retrieves detailed current weather information for a city.
-
-### Input
-
-```json
-{
-  "city": "Ginigathena"
-}
-```
-
-### Returned information
-
-* 🌡️ Temperature
-* 🤒 Feels-like temperature
-* ☁️ Weather condition
-* 💧 Humidity
-* 💨 Wind speed
-* 👁️ Visibility
-* 🌡️ Atmospheric pressure
-
-### Example
-
-```text
-Weather in Ginigathena:
-
-Temperature: 17°C
-Feels like: 17°C
-Condition: Cloudy
-Humidity: 94%
-Wind Speed: 11 km/h
-Visibility: 10 km
-Pressure: 1015 mb
-```
-
----
-
-## 📅 `get_forecast`
-
-Retrieves a multi-day weather forecast.
-
-### Input
-
-```json
-{
-  "city": "Ginigathena",
-  "days": 3
-}
-```
-
-The `days` parameter supports:
-
-```text
-1 → 3 days
-```
-
-### Returned information
-
-* Forecast date
 * Minimum temperature
 * Maximum temperature
 * Average temperature
+* Weather conditions
+* Rain probability
+* Humidity
+* Wind speed
 
----
+### AI Weather Assistant
 
-# 🔄 Request Flow
+The assistant connects Gemini with MCP weather tools so users can ask natural-language questions about weather conditions and forecasts.
 
-The overall system works like this:
+Example questions:
 
-```text
-                 ┌─────────────────────┐
-                 │      MCP Client     │
-                 │  Claude / Inspector │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │     MCP Server      │
-                 │     TypeScript      │
-                 └──────────┬──────────┘
-                            │
-          ┌─────────────────┼─────────────────┐
-          │                 │                 │
-          ▼                 ▼                 ▼
-     ┌──────────┐      ┌──────────┐      ┌──────────┐
-     │  Tools   │      │Resources │      │ Prompts  │
-     └────┬─────┘      └──────────┘      └──────────┘
-          │
-     ┌────┴─────────────┐
-     │                  │
-     ▼                  ▼
- Calculator         Weather API
-     │                  │
-     │                  ▼
-     │              wttr.in
-     │
-     ▼
-  Results
-```
+* What is the current weather in Kandy?
+* What will the weather be like in Colombo tomorrow?
+* Is the forecast suitable for outdoor activities?
 
----
+The assistant is designed to use tool results as its source of truth rather than inventing weather information.
 
-# 📂 Project Structure
+*AI-generated responses can still contain errors, so important weather and safety decisions should be checked against reliable sources.*
 
-```text
-mcp-weather-calculator/
-│
-├── 📁 src/
-│   │
-│   ├── 📁 tools/
-│   │   ├── calculator.ts
-│   │   ├── weather.ts
-│   │   └── forecast.ts
-│   │
-│   ├── 📁 resources/
-│   │   └── serverInfo.ts
-│   │
-│   ├── 📁 prompts/
-│   │   └── weatherReport.ts
-│   │
-│   └── index.ts
-│
-├── 📄 package.json
-├── 📄 package-lock.json
-├── 📄 tsconfig.json
-├── 📄 .gitignore
-└── 📄 README.md
-```
+## 🚀 Getting Started
 
-### Why this structure?
+### 1. Prerequisites
 
-The project follows a modular approach:
+Install:
 
-```text
-Tools       → src/tools/
-Resources   → src/resources/
-Prompts     → src/prompts/
-Server      → src/index.ts
-```
+* Node.js and npm
+* Git
+* Visual Studio Code or another code editor
 
-This makes it easier to add new functionality without turning `index.ts` into a large file.
+A Google Gemini API key is required for the AI assistant.
 
----
-
-# ⚙️ Technologies
-
-### Core
-
-* **TypeScript**
-* **Node.js**
-* **Model Context Protocol**
-* **Zod**
-
-### Integration
-
-* **Axios**
-* **wttr.in API**
-
-### Development & Testing
-
-* **VS Code**
-* **MCP Inspector**
-* **Git**
-* **GitHub**
-
----
-
-# 📦 Installation
-
-## 1. Clone the repository
+### 2. Clone the Repository
 
 ```bash
 git clone https://github.com/VishwaChandeepa/mcp-weather-calculator.git
-```
-
-```bash
 cd mcp-weather-calculator
 ```
 
-## 2. Install dependencies
+### 3. Install Dependencies
 
 ```bash
 npm install
 ```
 
-## 3. Validate TypeScript
+### 4. Configure Environment Variables
+
+Create a `.env` file in the project root.
+
+Add the following configuration:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key
+MCP_URL=http://localhost:3000/mcp
+PORT=3000
+FRONTEND_URL=http://localhost:5173
+GEMINI_MODEL=gemini-3.5-flash-lite
+WEATHER_REQUEST_TIMEOUT=10000
+```
+
+Replace `your_gemini_api_key` with your own valid API key.
+
+**Security:** Never commit your `.env` file or publish your API key on GitHub.
+
+### 5. Build the Project
 
 ```bash
-npx tsc --noEmit
+npm run build
 ```
 
-If there are no errors, the project is ready to run.
-
----
-
-# ▶️ Running the MCP Server
-
-Start the server with:
+### 6. Run Automated Tests
 
 ```bash
-npx tsx src/index.ts
+npm test
 ```
 
-The server communicates through **stdio**, so it is designed to be connected to an MCP-compatible client.
+At the latest verified development checkpoint, all **34 automated tests passed**, and the TypeScript build completed without errors.
 
----
+Run the commands yourself to verify the current version.
 
-# 🔍 Testing with MCP Inspector
+## ▶️ Running the Application
 
-MCP Inspector provides an interactive interface for testing the server.
-
-Run:
+### Start the MCP Server
 
 ```bash
-npx @modelcontextprotocol/inspector npx tsx src/index.ts
+npm start
 ```
 
-Then open the Inspector interface in your browser.
+This starts the stdio-based MCP server for compatible MCP clients.
 
-You can test:
+### Start the HTTP Server
+
+```bash
+npm run start:http
+```
+
+The HTTP server uses port `3000` by default.
+
+Available local endpoints include:
+
+| Endpoint            | Purpose                  |
+| ------------------- | ------------------------ |
+| `/mcp`              | MCP communication        |
+| `/api/weather`      | Current weather API      |
+| `/api/forecast`     | Forecast API             |
+| `/api/intelligence` | Weather intelligence API |
+| `/api/ai`           | AI assistant API         |
+
+The complete endpoint URLs use the local server address, such as `http://localhost:3000/api/weather`.
+
+## 🧪 Development Commands
+
+| Command              | Description                |
+| -------------------- | -------------------------- |
+| `npm install`        | Install dependencies       |
+| `npm start`          | Start the stdio MCP server |
+| `npm run start:http` | Start the HTTP server      |
+| `npm test`           | Run automated tests        |
+| `npm run build`      | Compile TypeScript         |
+
+## 📁 Project Structure
 
 ```text
-Tools
- ├── add
- ├── multiply
- ├── get_weather
- └── get_forecast
-
-Resources
- └── info://calculator
-
-Prompts
- └── weather_report
+mcp-weather-calculator/
+├── src/
+│   ├── ai/
+│   │   ├── weatherAssistant.ts
+│   │   └── weatherAssistant.test.ts
+│   ├── api/
+│   │   ├── ai.ts
+│   │   ├── forecast.ts
+│   │   ├── intelligence.ts
+│   │   └── weather.ts
+│   ├── intelligence/
+│   │   └── weatherIntelligence.ts
+│   ├── prompt/
+│   │   └── weatherReport.ts
+│   ├── resources/
+│   │   └── serverInfo.ts
+│   ├── tools/
+│   │   ├── calculator.ts
+│   │   ├── forecast.ts
+│   │   ├── intelligence.ts
+│   │   ├── server.ts
+│   │   └── weather.ts
+│   ├── config.ts
+│   ├── http.ts
+│   └── index.ts
+├── package.json
+├── package-lock.json
+├── tsconfig.json
+└── README.md
 ```
 
----
+*Note: This is a high-level illustration of the main modules; the exact files in your local checkout may differ.*
 
-# 🧪 Example Test
+## 🔐 Security and Reliability
 
-### Calculator
+The project incorporates practices such as:
 
-```text
-Input:
-a = 10
-b = 20
+* Input validation
+* Error handling for external API requests
+* Environment-based configuration
+* Keeping API keys outside source code
+* Automated tests
+* Validation of weather-related AI responses
 
-Output:
-The result is 30
-```
+## 🛣️ Future Improvements
 
-### Weather
+* Improve AI weather-response validation.
+* Expand automated tests and edge-case coverage.
+* Add GitHub Actions for continuous integration.
+* Improve the user interface and documentation.
+* Add Docker support.
+* Deploy the application online.
 
-```text
-Input:
-city = Ginigathena
-
-Output:
-Temperature: 17°C
-Condition: Cloudy
-Humidity: 94%
-Wind Speed: 11 km/h
-```
-
-### Forecast
-
-```text
-Input:
-city = Ginigathena
-days = 3
-
-Output:
-3-day weather forecast
-```
-
----
-
-# 🧩 Validation
-
-This project uses **Zod** to validate incoming tool parameters.
-
-For example, the forecast tool restricts the number of requested days:
-
-```text
-Minimum: 1 day
-Maximum: 3 days
-```
-
-This prevents invalid input from being processed.
-
----
-
-# 🔐 Security & Reliability
-
-The project follows several basic security and reliability practices:
-
-* ✅ Input validation with Zod
-* ✅ URL encoding for city names
-* ✅ API errors handled with `try/catch`
-* ✅ Sensitive files excluded through `.gitignore`
-* ✅ No API keys stored in source code
-* ✅ Structured MCP tool definitions
-
----
-
-# 🎯 Learning Objectives
-
-This project was created to understand practical MCP development using TypeScript.
-
-Key concepts explored:
-
-```text
-MCP Server
-    ↓
-Tools
-    ↓
-Resources
-    ↓
-Prompts
-    ↓
-External API Integration
-    ↓
-Input Validation
-    ↓
-Modular Architecture
-    ↓
-MCP Inspector Testing
-```
-
-The project also demonstrates how traditional backend functionality can be exposed as capabilities that AI applications can interact with through MCP.
-
----
-
-# 🔮 Future Roadmap
-
-The project can be extended with additional capabilities.
-
-### Calculator
-
-* [ ] ➖ Subtraction
-* [ ] ➗ Division
-* [ ] 📊 Percentage calculation
-* [ ] 🌡️ Temperature conversion
-
-### Weather
-
-* [ ] 🌅 Sunrise / sunset
-* [ ] 🌧️ Rain probability
-* [ ] 🌬️ Wind direction
-* [ ] 🌎 UV index
-* [ ] 📍 Coordinates / geolocation
-* [ ] 📆 Longer forecasts
-
-### MCP
-
-* [ ] More MCP Resources
-* [ ] More reusable Prompts
-* [ ] Advanced tool combinations
-* [ ] Better API error handling
-* [ ] Automated testing
-* [ ] Docker support
-* [ ] CI/CD with GitHub Actions
-
----
-
-# 📸 Project Demo
-
-### MCP Inspector
-
-*Add your MCP Inspector screenshot here.*
-
-```text
-docs/
-└── mcp-inspector.png
-```
-
-Then add:
-
-```markdown
-![MCP Inspector](docs/mcp-inspector.png)
-```
-
-### Architecture
-
-*Add an architecture diagram here.*
-
-```text
-MCP Client
-    ↓
-MCP Server
-    ↓
-Tools / Resources / Prompts
-    ↓
-External Weather API
-```
-
----
-
-# 🌟 Why This Project?
-
-This project goes beyond creating a simple weather API.
-
-It demonstrates how an application can expose different types of capabilities through **Model Context Protocol**:
-
-```text
-             MCP
-              │
-      ┌───────┼───────┐
-      ▼       ▼       ▼
-    Tools  Resources Prompts
-      │       │       │
-      ▼       ▼       ▼
-   Actions  Context Instructions
-```
-
-This makes the project a practical introduction to building **AI-integrated developer tools and services**.
-
----
-
-# 👨‍💻 Author
+## 👨‍💻 Author
 
 **Vishwa Chandeepa**
-
 Software Engineering Undergraduate
 NSBM Green University
 
-### Connect
-
-* GitHub: [VishwaChandeepa](https://github.com/VishwaChandeepa)
-* LinkedIn: [Vishwa Chandeepa](https://linkedin.com/in/vishwachandeepa)
+* **GitHub:** https://github.com/VishwaChandeepa
+* **LinkedIn:** https://www.linkedin.com/in/vishwachandeepa/
 
 ---
 
-## ⭐ Support
-
-If you found this project useful or interesting, consider giving the repository a ⭐ on GitHub.
-
----
-
-<p align="center">
-  Built with TypeScript + MCP + ☁️ Weather APIs
-</p>
+If you find this project interesting, feel free to explore the repository and share your feedback.
